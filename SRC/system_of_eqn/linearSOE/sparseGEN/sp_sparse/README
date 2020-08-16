@@ -1,0 +1,8 @@
+This folder contains the impelmentation of sparse matrix in forms of COO, CSR and CSC.
+
+The templates are taken and adapted from the corresponding implementations in project suanPan. https://github.com/TLCFEM/suanPan
+
+The code is distributed under GPL-3.0 and later version. Please check the LICENSE file for detailed clauses.
+
+by tlc (tlcfem@gmail.com)
+08/2020
