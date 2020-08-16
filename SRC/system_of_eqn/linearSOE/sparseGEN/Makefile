@@ -15,6 +15,7 @@ OBJS       = SparseGenColLinSOE.o \
 	SparseGenRowLinSOE.o \
 	SparseGenRowLinSolver.o \
 	SuperLU.o \
+	LeeSparse.o \
 	DistributedSuperLU.o \
 	DistributedSparseGenColLinSOE.o \
 	DistributedSparseGenRowLinSOE.o \
@@ -41,6 +42,7 @@ OBJS       = SparseGenColLinSOE.o \
 	SparseGenRowLinSOE.o \
 	SparseGenRowLinSolver.o \
 	SuperLU.o \
+	LeeSparse.o \
 	DistributedSuperLU.o \
 	DistributedSparseGenColLinSOE.o \
 	DistributedSparseGenRowLinSOE.o \
@@ -64,6 +66,7 @@ OBJS       = $(CULA_SOLVER) SparseGenColLinSOE.o \
 	SparseGenRowLinSOE.o \
 	SparseGenRowLinSolver.o \
 	SuperLU.o \
+	LeeSparse.o \
 	PFEMSolver.o \
 	PFEMSolver_Umfpack.o \
 	PFEMSolver_Mumps.o \

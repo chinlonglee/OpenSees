@@ -192,6 +192,7 @@
     <ClCompile Include="..\..\..\SRC\system_of_eqn\eigenSOE\EigenSolver.cpp" />
     <ClCompile Include="..\..\..\SRC\system_of_eqn\linearSOE\LinearSOE.cpp" />
     <ClCompile Include="..\..\..\SRC\system_of_eqn\linearSOE\LinearSOESolver.cpp" />
+    <ClCompile Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\LeeSparse.cpp" />
     <ClCompile Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\PFEMSolver_Laplace.cpp" />
     <ClCompile Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\PFEMSolver_LumpM.cpp" />
     <ClCompile Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\PFEMSolver_Mumps.cpp" />
@@ -255,10 +256,16 @@
     <ClInclude Include="..\..\..\SRC\system_of_eqn\eigenSOE\EigenSolver.h" />
     <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\LinearSOE.h" />
     <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\LinearSOESolver.h" />
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\LeeSparse.h" />
     <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\PFEMSolver_Laplace.h" />
     <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\PFEMSolver_LumpM.h" />
     <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\PFEMSolver_Mumps.h" />
     <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\PFEMSolver_Umfpack.h" />
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\sp_sparse\comparator.hpp" />
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\sp_sparse\csc_form.hpp" />
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\sp_sparse\csr_form.hpp" />
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\sp_sparse\sparse_form.hpp" />
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\sp_sparse\triplet_form.hpp" />
     <ClInclude Include="..\..\..\SRC\system_of_eqn\Solver.h" />
     <ClInclude Include="..\..\..\SRC\system_of_eqn\SystemOfEqn.h" />
     <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\profileSPD\DistributedProfileSPDLinSOE.h" />

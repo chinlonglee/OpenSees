@@ -48,6 +48,7 @@ OBJS       = AlphaOS.o \
 	LoadPath.o \
 	MinUnbalDispNorm.o \
 	Newmark.o \
+	LeeNewmark.o \
 	Newmark1.o \
 	NewmarkExplicit.o \
 	NewmarkHSFixedNumIter.o \

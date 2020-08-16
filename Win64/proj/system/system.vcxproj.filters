@@ -47,6 +47,9 @@
     <Filter Include="pardiso">
       <UniqueIdentifier>{723fd79e-0d4a-4e38-8be8-aebeea3e8a24}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sparseGEN\sp_sparse">
+      <UniqueIdentifier>{98781426-344f-4f10-9f68-2739a71ac314}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\SRC\system_of_eqn\linearSOE\DomainSolver.cpp">
@@ -232,6 +235,9 @@
     <ClCompile Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\PFEMSolver_Mumps.cpp">
       <Filter>sparseGEN</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\LeeSparse.cpp">
+      <Filter>sparseGEN</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\DomainSolver.h">
@@ -404,6 +410,24 @@
     </ClInclude>
     <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\PFEMSolver_Mumps.h">
       <Filter>sparseGEN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\LeeSparse.h">
+      <Filter>sparseGEN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\sp_sparse\comparator.hpp">
+      <Filter>sparseGEN\sp_sparse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\sp_sparse\csc_form.hpp">
+      <Filter>sparseGEN\sp_sparse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\sp_sparse\csr_form.hpp">
+      <Filter>sparseGEN\sp_sparse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\sp_sparse\sparse_form.hpp">
+      <Filter>sparseGEN\sp_sparse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\SRC\system_of_eqn\linearSOE\sparseGEN\sp_sparse\triplet_form.hpp">
+      <Filter>sparseGEN\sp_sparse</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
