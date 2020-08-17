@@ -88,8 +88,10 @@ int LeeNewmark::formTangent(const int F) {
 		return -1;
 	}
 
-	t_soe->zero_current_stiffness();
-	t_soe->zero_mass();
+	if(first_iteration) {
+		t_soe->zero_current_stiffness();
+		t_soe->zero_mass();
+	}
 	t_soe->zero_stiffness();
 	t_soe->zero_damping();
 
@@ -97,15 +99,17 @@ int LeeNewmark::formTangent(const int F) {
 	DOF_Group* t_dofptr;
 
 	while((t_dofptr = t_dof()) != nullptr) {
-		which_matrix = MatType::CurrentStiffness;
-		if(t_soe->add_current_stiffness(t_dofptr->getTangent(this), t_dofptr->getID()) < 0) {
-			opserr << "LeeNewmark::formTangent() - failed to add_stiffness:dof\n";
-			result = -1;
-		}
-		which_matrix = MatType::Mass;
-		if(t_soe->add_mass(t_dofptr->getTangent(this), t_dofptr->getID()) < 0) {
-			opserr << "LeeNewmark::formTangent() - failed to add_mass:dof\n";
-			result = -1;
+		if(first_iteration) {
+			which_matrix = MatType::CurrentStiffness;
+			if(t_soe->add_current_stiffness(t_dofptr->getTangent(this), t_dofptr->getID()) < 0) {
+				opserr << "LeeNewmark::formTangent() - failed to add_stiffness:dof\n";
+				result = -1;
+			}
+			which_matrix = MatType::Mass;
+			if(t_soe->add_mass(t_dofptr->getTangent(this), t_dofptr->getID()) < 0) {
+				opserr << "LeeNewmark::formTangent() - failed to add_mass:dof\n";
+				result = -1;
+			}
 		}
 		which_matrix = MatType::Stiffness;
 		if(t_soe->add_stiffness(t_dofptr->getTangent(this), t_dofptr->getID()) < 0) {
@@ -122,15 +126,17 @@ int LeeNewmark::formTangent(const int F) {
 	auto& t_ele = t_model->getFEs();
 	FE_Element* t_eleptr;
 	while((t_eleptr = t_ele()) != nullptr) {
-		which_matrix = MatType::CurrentStiffness;
-		if(t_soe->add_current_stiffness(t_eleptr->getTangent(this), t_eleptr->getID()) < 0) {
-			opserr << "LeeNewmark::formTangent() - failed to add_stiffness:ele\n";
-			result = -2;
-		}
-		which_matrix = MatType::Mass;
-		if(t_soe->add_mass(t_eleptr->getTangent(this), t_eleptr->getID()) < 0) {
-			opserr << "LeeNewmark::formTangent() - failed to add_mass:ele\n";
-			result = -2;
+		if(first_iteration) {
+			which_matrix = MatType::CurrentStiffness;
+			if(t_soe->add_current_stiffness(t_eleptr->getTangent(this), t_eleptr->getID()) < 0) {
+				opserr << "LeeNewmark::formTangent() - failed to add_stiffness:ele\n";
+				result = -2;
+			}
+			which_matrix = MatType::Mass;
+			if(t_soe->add_mass(t_eleptr->getTangent(this), t_eleptr->getID()) < 0) {
+				opserr << "LeeNewmark::formTangent() - failed to add_mass:ele\n";
+				result = -2;
+			}
 		}
 		which_matrix = MatType::Stiffness;
 		if(t_soe->add_stiffness(t_eleptr->getTangent(this), t_eleptr->getID()) < 0) {
@@ -167,10 +173,11 @@ int LeeNewmark::formTangent(const int F) {
 	t_soe->stiffness += t_soe->mass * C6 + t_soe->damping * c2;
 
 	// check in tangent stiffness
-
-	t_soe->current_stiffness.csc_condense();
+	if(first_iteration) {
+		t_soe->current_stiffness.csc_condense();
+		t_soe->mass.csc_condense();
+	}
 	t_soe->stiffness.csc_condense();
-	t_soe->mass.csc_condense();
 	t_soe->damping.csc_condense();
 
 	auto row = t_soe->stiffness.row_idx;
