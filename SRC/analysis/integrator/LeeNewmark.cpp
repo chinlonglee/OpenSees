@@ -180,11 +180,7 @@ int LeeNewmark::formTangent(const int F) {
 	t_soe->stiffness.csc_condense();
 	t_soe->damping.csc_condense();
 
-	auto row = t_soe->stiffness.row_idx;
-	auto col = t_soe->stiffness.col_idx;
-	auto val = t_soe->stiffness.val_idx;
-
-	for(index_t I = 0; I < t_soe->stiffness.c_size; ++I) stiffness.at(row[I], col[I]) = val[I];
+	stiffness += t_soe->stiffness;
 
 	if(first_iteration) {
 		// for the first iteration of each substep
@@ -194,9 +190,9 @@ int LeeNewmark::formTangent(const int F) {
 		first_iteration = false;
 
 		for(index_t I = 0, J = n_block; I < n_damping; ++I, J += n_block) {
-			row = t_soe->mass.row_idx;
-			col = t_soe->mass.col_idx;
-			val = t_soe->mass.val_idx;
+			auto row = t_soe->mass.row_idx;
+			auto col = t_soe->mass.col_idx;
+			auto val = t_soe->mass.val_idx;
 			for(index_t O = 0; O < t_soe->mass.c_size; ++O) {
 				const auto K = row[O], L = col[O], M = K + J, N = L + J;
 				stiffness.at(M, L) = c2 * (stiffness.at(K, N) = -(stiffness.at(M, N) = mass_coef[I] * val[O]));
