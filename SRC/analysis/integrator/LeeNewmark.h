@@ -33,11 +33,12 @@ class LeeNewmark final : public Newmark {
 	std::vector<double> mass_coef, stiffness_coef;
 
 	double omega = 0.;
+	double deltat = 0.;
 
 	index_t n_damping = 0;
 	index_t n_block = 0;
 
-	double C6 = 0.;
+	double C6 = 0., C7 = 0.;
 
 	bool first_iteration = true;
 

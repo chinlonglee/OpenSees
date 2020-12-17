@@ -170,7 +170,7 @@ int LeeNewmark::formTangent(const int F) {
 		}
 	}
 
-	t_soe->stiffness += t_soe->mass * C6 + t_soe->damping * c2;
+	t_soe->stiffness += t_soe->mass * C6 + t_soe->damping * C7;
 
 	// check in tangent stiffness
 	if(first_iteration) {
@@ -195,7 +195,7 @@ int LeeNewmark::formTangent(const int F) {
 			auto val = t_soe->mass.val_idx;
 			for(index_t O = 0; O < t_soe->mass.c_size; ++O) {
 				const auto K = row[O], L = col[O], M = K + J, N = L + J;
-				stiffness.at(M, L) = c2 * (stiffness.at(K, N) = -(stiffness.at(M, N) = mass_coef[I] * val[O]));
+				stiffness.at(M, L) = C7 * (stiffness.at(K, N) = -(stiffness.at(M, N) = mass_coef[I] * val[O]));
 			}
 			row = t_soe->current_stiffness.row_idx;
 			col = t_soe->current_stiffness.col_idx;
@@ -329,7 +329,8 @@ int LeeNewmark::newStep(const double DT) {
 
 	if(0 != flag) return flag;
 
-	C6 = c3 + omega * c2;
+	C7 = gamma / (beta * DT);
+	C6 = 1. / (beta * DT * DT) + omega * C7;
 
 	return 0;
 }
