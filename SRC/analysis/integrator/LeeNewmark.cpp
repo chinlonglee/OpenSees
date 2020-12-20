@@ -57,8 +57,8 @@ void* OPS_LeeNewmark() {
 	return new LeeNewmark(gamma, beta, X, F);
 }
 
-LeeNewmark::LeeNewmark(const double _gamma, const double _beta, const std::vector<double>& X, const std::vector<double>& F, const bool dispFlag, const bool aflag, const int classTag_)
-	: Newmark(_gamma, _beta, dispFlag, aflag, classTag_) {
+LeeNewmark::LeeNewmark(const double _gamma, const double _beta, const std::vector<double>& X, const std::vector<double>& F)
+	: Newmark(_gamma, _beta) {
 	if(X.size() != F.size()) throw;
 
 	n_damping = X.size();
@@ -84,7 +84,7 @@ int LeeNewmark::formTangent(const int F) {
 	auto t_model = getAnalysisModel();
 
 	if(t_soe == nullptr || t_model == nullptr) {
-		opserr << "WARNING LeeNewmark::formTangent() no LinearSOE or AnalysisModel has been set\n";
+		opserr << "WARNING LeeNewmark::formTangent() no LeeSparse or AnalysisModel has been set\n";
 		return -1;
 	}
 
@@ -210,8 +210,8 @@ int LeeNewmark::formTangent(const int F) {
 int LeeNewmark::formEleTangent(FE_Element* theEle) {
 	theEle->zeroTangent();
 
-	if(MatType::CurrentStiffness == which_matrix) theEle->addKiToTang();
-	else if(MatType::Stiffness == which_matrix)
+	if(MatType::InitialStiffness == which_matrix) theEle->addKiToTang();
+	else if(MatType::Stiffness == which_matrix || MatType::CurrentStiffness == which_matrix)
 		if(statusFlag == CURRENT_TANGENT) theEle->addKtToTang();
 		else if(statusFlag == INITIAL_TANGENT) theEle->addKiToTang();
 		else if(statusFlag == HALL_TANGENT) {
@@ -240,7 +240,7 @@ int LeeNewmark::formUnbalance() {
 	const auto t_soe = dynamic_cast<LeeSparse*>(getLinearSOE());
 
 	if(nullptr == t_soe) {
-		opserr << "WARNING LeeNewmark::formUnbalance() no LinearSOE or AnalysisModel has been set\n";
+		opserr << "WARNING LeeNewmark::formUnbalance() need a LeeSparse system\n";
 		return -1;
 	}
 
@@ -278,25 +278,19 @@ int LeeNewmark::commit() {
 
 int LeeNewmark::revertToLastStep() {
 	first_iteration = true;
-	const auto flag = Newmark::revertToLastStep();
-
-	if(flag != 0) return flag;
 
 	trial_internal = current_internal;
 
-	return 0;
+	return Newmark::revertToLastStep();
 }
 
 int LeeNewmark::revertToStart() {
 	first_iteration = true;
-	const auto flag = Newmark::revertToLastStep();
-
-	if(flag != 0) return flag;
 
 	trial_internal.Zero();
 	current_internal.Zero();
 
-	return 0;
+	return Newmark::revertToStart();
 }
 
 int LeeNewmark::domainChanged() {

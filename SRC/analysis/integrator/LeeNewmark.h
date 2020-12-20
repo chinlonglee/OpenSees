@@ -26,14 +26,13 @@
 #include <sparseGEN/sp_sparse/triplet_form.hpp>
 
 class LeeNewmark final : public Newmark {
-	enum class MatType { None, CurrentStiffness, Stiffness, Mass, Damping };
+	enum class MatType { None, InitialStiffness, CurrentStiffness, Stiffness, Mass, Damping };
 
 	MatType which_matrix = MatType::None;
 
 	std::vector<double> mass_coef, stiffness_coef;
 
 	double omega = 0.;
-	double deltat = 0.;
 
 	index_t n_damping = 0;
 	index_t n_block = 0;
@@ -44,7 +43,7 @@ class LeeNewmark final : public Newmark {
 
 	Vector current_internal, trial_internal;
 public:
-	LeeNewmark(double, double, const std::vector<double>&, const std::vector<double>&, bool = true, bool = false, int = INTEGRATOR_TAGS_Newmark);
+	LeeNewmark(double, double, const std::vector<double>&, const std::vector<double>&);
 
 	int formTangent(int) override;
 
