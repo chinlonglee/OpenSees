@@ -41,9 +41,11 @@ class LeeNewmark final : public Newmark {
 
 	bool first_iteration = true;
 
+	const bool use_initial;
+
 	Vector current_internal, trial_internal;
 public:
-	LeeNewmark(double, double, const std::vector<double>&, const std::vector<double>&);
+	LeeNewmark(double, double, const std::vector<double>&, const std::vector<double>&, bool = false);
 
 	int formTangent(int) override;
 
@@ -64,6 +66,6 @@ public:
 	int newStep(double) override;
 };
 
-void* OPS_LeeNewmark();
+void* OPS_LeeNewmark(bool);
 
 #endif

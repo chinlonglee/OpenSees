@@ -31,7 +31,7 @@
 #include <LinearSOE.h>
 #include <sparseGEN/LeeSparse.h>
 
-void* OPS_LeeNewmark() {
+void* OPS_LeeNewmark(const bool use_initial) {
 	const auto argc = OPS_GetNumRemainingInputArgs();
 	if(argc % 2 != 0) {
 		opserr << "WARNING - incorrect number of args want LeeNewmark\n";
@@ -49,16 +49,17 @@ void* OPS_LeeNewmark() {
 
 	num_argument = 1;
 
-	for(auto& I : X)
-		OPS_GetDouble(&num_argument, &I);
-	for(auto& I : F)
-		OPS_GetDouble(&num_argument, &I);
+	for(auto I = 0llu; I < X.size(); ++I) {
+		OPS_GetDouble(&num_argument, &X[I]);
+		OPS_GetDouble(&num_argument, &F[I]);
+	}
 
-	return new LeeNewmark(gamma, beta, X, F);
+	return new LeeNewmark(gamma, beta, X, F, use_initial);
 }
 
-LeeNewmark::LeeNewmark(const double _gamma, const double _beta, const std::vector<double>& X, const std::vector<double>& F)
-	: Newmark(_gamma, _beta) {
+LeeNewmark::LeeNewmark(const double _gamma, const double _beta, const std::vector<double>& X, const std::vector<double>& F, const bool _use_initial)
+	: Newmark(_gamma, _beta)
+	, use_initial(_use_initial) {
 	if(X.size() != F.size()) throw;
 
 	n_damping = X.size();
@@ -100,7 +101,7 @@ int LeeNewmark::formTangent(const int F) {
 
 	while((t_dofptr = t_dof()) != nullptr) {
 		if(first_iteration) {
-			which_matrix = MatType::CurrentStiffness;
+			which_matrix = use_initial ? MatType::InitialStiffness : MatType::CurrentStiffness;
 			if(t_soe->add_current_stiffness(t_dofptr->getTangent(this), t_dofptr->getID()) < 0) {
 				opserr << "LeeNewmark::formTangent() - failed to add_stiffness:dof\n";
 				result = -1;
@@ -127,7 +128,7 @@ int LeeNewmark::formTangent(const int F) {
 	FE_Element* t_eleptr;
 	while((t_eleptr = t_ele()) != nullptr) {
 		if(first_iteration) {
-			which_matrix = MatType::CurrentStiffness;
+			which_matrix = use_initial ? MatType::InitialStiffness : MatType::CurrentStiffness;
 			if(t_soe->add_current_stiffness(t_eleptr->getTangent(this), t_eleptr->getID()) < 0) {
 				opserr << "LeeNewmark::formTangent() - failed to add_stiffness:ele\n";
 				result = -2;

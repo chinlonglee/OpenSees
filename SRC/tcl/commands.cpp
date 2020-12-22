@@ -4638,7 +4638,13 @@ specifyIntegrator(ClientData clientData, Tcl_Interp *interp, int argc,
   }
 
   else if(strcmp(argv[1], "LeeNewmark") == 0) {
-	  theTransientIntegrator = static_cast<TransientIntegrator*>(OPS_LeeNewmark());
+	  theTransientIntegrator = static_cast<TransientIntegrator*>(OPS_LeeNewmark(false));
+
+	  if(nullptr != theTransientAnalysis) theTransientAnalysis->setIntegrator(*theTransientIntegrator);
+  }
+  
+  else if(strcmp(argv[1], "LeeNewmarkWithInitialStiffness") == 0) {
+	  theTransientIntegrator = static_cast<TransientIntegrator*>(OPS_LeeNewmark(true));
 
 	  if(nullptr != theTransientAnalysis) theTransientAnalysis->setIntegrator(*theTransientIntegrator);
   }
