@@ -226,6 +226,7 @@ extern void *OPS_NewmarkHSIncrReduct(void);
 extern void *OPS_WilsonTheta(void);
 
 #include <LeeNewmark.h>
+#include <LeeNewmarkFull.h>
 #include <LeeSparse.h>
 #include <Newmark.h>
 #include <TRBDF2.h>
@@ -4645,6 +4646,12 @@ specifyIntegrator(ClientData clientData, Tcl_Interp *interp, int argc,
   
   else if(strcmp(argv[1], "LeeNewmarkWithInitialStiffness") == 0) {
 	  theTransientIntegrator = static_cast<TransientIntegrator*>(OPS_LeeNewmark(true));
+
+	  if(nullptr != theTransientAnalysis) theTransientAnalysis->setIntegrator(*theTransientIntegrator);
+  }
+  
+  else if(strcmp(argv[1], "LeeNewmarkFull") == 0) {
+	  theTransientIntegrator = static_cast<TransientIntegrator*>(OPS_LeeNewmarkFull());
 
 	  if(nullptr != theTransientAnalysis) theTransientAnalysis->setIntegrator(*theTransientIntegrator);
   }
