@@ -26,6 +26,7 @@
 #include <sparseGEN/sp_sparse/triplet_form.hpp>
 
 class LeeNewmarkFull final : public Newmark {
+public:
 	enum class Type { T0, T1, T2, T3 };
 
 	struct Basis {
@@ -34,9 +35,10 @@ class LeeNewmarkFull final : public Newmark {
 		double zeta, omega;
 	};
 
+private:
 	std::vector<Basis> damping_basis;
 
-	  triplet_form<double> rabbit;
+	triplet_form<double> rabbit;
 	const triplet_form<double> current_stiffness;
 	const triplet_form<double> current_mass;
 
@@ -44,7 +46,7 @@ class LeeNewmarkFull final : public Newmark {
 
 	unsigned get_amplifier() const;
 	unsigned get_total_size() const;
-	void update_residual() const  ;
+	void update_residual() const;
 
 	void assemble_by_type_zero(triplet_form<double>&, unsigned&, double, double) const;
 	void assemble_by_type_one(triplet_form<double>&, unsigned&, double, double, double) const;
@@ -64,15 +66,17 @@ class LeeNewmarkFull final : public Newmark {
 
 	Vector current_internal, trial_internal;
 public:
-	LeeNewmarkFull(double, double, const std::vector<double>&, const std::vector<double>&, bool = false);
+	LeeNewmarkFull(double,               // alpha
+	               double,               // beta
+	               std::vector<Basis>&&, // damping basis vector
+	               unsigned              // flag to indicate which stiffness to be used
+	);
 
 	int formTangent(int) override;
 
 	int formEleTangent(FE_Element*) override;
 
 	int formNodTangent(DOF_Group*) override;
-
-	int formUnbalance() override;
 
 	int commit() override;
 	int revertToLastStep() override;
@@ -83,6 +87,6 @@ public:
 	int update(const Vector&) override;
 };
 
-void* OPS_LeeNewmarkFull();
+void* OPS_LeeNewmarkFull(unsigned);
 
 #endif

@@ -30,11 +30,66 @@
 #include <iostream>
 #include <LinearSOE.h>
 #include <sparseGEN/LeeSparse.h>
+#include <string.h>
 
-void* OPS_LeeNewmarkFull() {
-	// TODO: need implementation
+void* OPS_LeeNewmarkFull(const unsigned stiffness_type) {
+	double gamma = -1., beta = -1.;
 
-	return nullptr;
+	int num_to_read = 1;
+
+	OPS_GetDoubleInput(&num_to_read, &gamma);
+
+	OPS_GetDoubleInput(&num_to_read, &beta);
+
+	std::vector<LeeNewmarkFull::Basis> damping_basis;
+
+	double omega, zeta, para_a, para_b, para_c;
+
+	while(true) {
+		// get type identifier
+		// if failed break;
+		const char* type_raw_string = OPS_GetString();
+
+		if(0 == type_raw_string) break;
+		// 
+		// get omega and zeta
+		if(strcmp(type_raw_string, "-type0") == 0) {
+			// type0
+			OPS_GetDoubleInput(&num_to_read, &omega);
+			OPS_GetDoubleInput(&num_to_read, &zeta);
+
+			damping_basis.emplace_back(LeeNewmarkFull::Basis{LeeNewmarkFull::Type::T0, std::vector<double>{}, omega, zeta});
+		} else if(strcmp(type_raw_string, "-type1") == 0) {
+			// type1
+			OPS_GetDoubleInput(&num_to_read, &omega);
+			OPS_GetDoubleInput(&num_to_read, &zeta);
+			OPS_GetDoubleInput(&num_to_read, &para_a); // n_p
+
+			damping_basis.emplace_back(LeeNewmarkFull::Basis{LeeNewmarkFull::Type::T1, std::vector<double>{para_a}, omega, zeta});
+		} else if(strcmp(type_raw_string, "-type2") == 0) {
+			// type2
+			OPS_GetDoubleInput(&num_to_read, &omega);
+			OPS_GetDoubleInput(&num_to_read, &zeta);
+			OPS_GetDoubleInput(&num_to_read, &para_a); // n_pl
+			OPS_GetDoubleInput(&num_to_read, &para_b); // n_pr
+
+			damping_basis.emplace_back(LeeNewmarkFull::Basis{LeeNewmarkFull::Type::T2, std::vector<double>{para_a, para_b}, omega, zeta});
+		} else if(strcmp(type_raw_string, "-type3") == 0) {
+			// type3
+			OPS_GetDoubleInput(&num_to_read, &omega);
+			OPS_GetDoubleInput(&num_to_read, &zeta);
+			OPS_GetDoubleInput(&num_to_read, &para_a); // gamma
+
+			damping_basis.emplace_back(LeeNewmarkFull::Basis{LeeNewmarkFull::Type::T3, std::vector<double>{para_a}, omega, zeta});
+		} else {
+			opserr << "unknown flag\n";
+			return nullptr;
+		}
+	}
+
+	if(damping_basis.empty()) return nullptr;
+
+	return new LeeNewmarkFull(gamma, beta, std::move(damping_basis), stiffness_type);
 }
 
 unsigned LeeNewmarkFull::get_amplifier() const {
@@ -62,11 +117,40 @@ unsigned LeeNewmarkFull::get_total_size() const {
 }
 
 void LeeNewmarkFull::update_residual() const {
-	// TODO: to be implemented
-	
+	auto t_soe = dynamic_cast<LeeSparse*>(getLinearSOE());
+
+	auto& residual = t_soe->residual;
+
+	// 1. get damping force due to big C from matrix-vector multiplication
+	auto trial_vel = (-1) * trial_internal;
+	for(auto I = 0u; I < n_block; ++I) trial_vel(I) = (*Udot)(I) / -c2;
+
+	// now residual holds the damping force solely due to global damping model big C
+	residual = t_soe->global_stiffness * trial_vel;
+
+	// 2. get original residual due to K, M and C.
+	auto& original_residual = t_soe->getB();
+
+	for(auto I = 0u; I < n_block; ++I) residual(I) += original_residual(I);
 }
 
-void LeeNewmarkFull::assemble_by_type_zero(triplet_form<double>&, unsigned&, double, double) const {}
+void LeeNewmarkFull::assemble_by_type_zero(triplet_form<double>& stiffness, unsigned& current_pos, double mass_coef, double stiffness_coef) const {
+	const auto I = current_pos;
+
+	auto row = current_mass.row_idx;
+	auto col = current_mass.col_idx;
+	auto val = current_mass.val_idx;
+	for(index_t J = 0; J < current_mass.c_size; ++J) {
+		const index_t K = row[J], L = col[J], M = K + I, N = L + I;
+		stiffness.at(K, N) = stiffness.at(M, L) = -(stiffness.at(K, L) = stiffness.at(M, N) = mass_coef * val[J]);
+	}
+	row = current_stiffness.row_idx;
+	col = current_stiffness.col_idx;
+	val = current_stiffness.val_idx;
+	for(index_t J = 0; J < current_stiffness.c_size; ++J) stiffness.at(row[J] + I, col[J] + I) = stiffness_coef * val[J];
+
+	current_pos += n_block;
+}
 
 void LeeNewmarkFull::assemble_by_type_one(triplet_form<double>& stiffness, unsigned& current_pos, const double mass_coef, const double stiffness_coef, double order) const {
 	const auto mass_coefs = .5 * mass_coef;           // eq. 10
@@ -131,8 +215,14 @@ void LeeNewmarkFull::assemble_by_type_three(triplet_form<double>&, unsigned&, do
 
 void LeeNewmarkFull::assemble_by_type_four(triplet_form<double>&, unsigned&, double, double, double) const {}
 
-LeeNewmarkFull::LeeNewmarkFull(const double _gamma, const double _beta, const std::vector<double>& X, const std::vector<double>& F, const bool _use_initial)
-	: Newmark(_gamma, _beta) {}
+// constructor
+// std::vector<Basis>&& is a r-value
+LeeNewmarkFull::LeeNewmarkFull(const double _gamma, const double _beta, std::vector<Basis>&&
+                               _basis
+                               , const unsigned _stiffness_type)
+	: Newmark(_gamma, _beta)
+	, damping_basis(std::forward<std::vector<Basis>>(_basis))
+	, stiffness_type(static_cast<MatType>(_stiffness_type)) {}
 
 int LeeNewmarkFull::formTangent(const int F) {
 	statusFlag = F;
@@ -147,7 +237,7 @@ int LeeNewmarkFull::formTangent(const int F) {
 		return -1;
 	}
 
-	if(first_iteration) {
+	if(first_iteration || stiffness_type == MatType::TangentStiffness) {
 		t_soe->zero_current_stiffness();
 		t_soe->zero_mass();
 	}
@@ -158,7 +248,7 @@ int LeeNewmarkFull::formTangent(const int F) {
 	DOF_Group* t_dofptr;
 
 	while((t_dofptr = t_dof()) != nullptr) {
-		if(first_iteration) {
+		if(first_iteration || stiffness_type == MatType::TangentStiffness) {
 			which_matrix = stiffness_type;
 			if(t_soe->add_current_stiffness(t_dofptr->getTangent(this), t_dofptr->getID()) < 0) {
 				opserr << "LeeNewmarkFull::formTangent() - failed to add_stiffness:dof\n";
@@ -185,7 +275,7 @@ int LeeNewmarkFull::formTangent(const int F) {
 	auto& t_ele = t_model->getFEs();
 	FE_Element* t_eleptr;
 	while((t_eleptr = t_ele()) != nullptr) {
-		if(first_iteration) {
+		if(first_iteration || stiffness_type == MatType::TangentStiffness) {
 			which_matrix = stiffness_type;
 			if(t_soe->add_current_stiffness(t_eleptr->getTangent(this), t_eleptr->getID()) < 0) {
 				opserr << "LeeNewmarkFull::formTangent() - failed to add_stiffness:ele\n";
@@ -215,15 +305,12 @@ int LeeNewmarkFull::formTangent(const int F) {
 
 	auto& stiffness = t_soe->global_stiffness;
 
-	stiffness.zeros();
-
 	// global stiffness is now populated with global damping matrix
 	// need to add K+M+C to top left corner
 
-	if(first_iteration) {
+	if(first_iteration || stiffness_type == MatType::TangentStiffness) {
 		// preallocate memory
-		stiffness.resize(get_amplifier() * t_soe->stiffness.c_size);
-		stiffness.zeros();
+		stiffness = triplet_form<double>(get_total_size(), get_total_size(), get_amplifier() * t_soe->stiffness.c_size);
 
 		t_soe->mass.csc_condense();
 		t_soe->current_stiffness.csc_condense();
@@ -247,7 +334,7 @@ int LeeNewmarkFull::formTangent(const int F) {
 			else if(Type::T3 == I.t) assemble_by_type_three(stiffness, IDX, mass_coef, stiffness_coef, I.p[0]);
 		}
 
-		// now stiffness holds global damping matrix
+		// now stiffness holds global damping matrix big C
 		stiffness.csc_condense();
 
 		// update residual according to global damping matrix
@@ -326,39 +413,6 @@ int LeeNewmarkFull::formNodTangent(DOF_Group* theDof) {
 
 	if(MatType::Mass == which_matrix) theDof->addMtoTang();
 	else if(MatType::Damping == which_matrix) theDof->addCtoTang();
-
-	return 0;
-}
-
-int LeeNewmarkFull::formUnbalance() {
-	const auto flag = TransientIntegrator::formUnbalance();
-	if(0 != flag) return flag;
-
-	const auto t_soe = dynamic_cast<LeeSparse*>(getLinearSOE());
-
-	if(nullptr == t_soe) {
-		opserr << "WARNING LeeNewmarkFull::formUnbalance() need a LeeSparse system\n";
-		return -1;
-	}
-
-	auto& residual = t_soe->residual;
-
-	if(0 == residual.Size()) residual.resize(static_cast<int>(get_total_size()));
-
-	// TODO: formulate residual based on global effective stiffness matrix
-	//
-	// 
-	// vec trial_vel = -trial_internal;
-	// trial_vel.head(n_block) = factory->get_trial_velocity() / -C1;
-	// access::rw(residual) = stiffness * trial_vel;
-	// // ? may potentially improve performance
-	// // access::rw(residual) = csr_form<double>(stiffness->triplet_mat) * trial_vel;
-	//
-	// // ! check in damping force
-	// get_trial_damping_force(factory) -= residual.head(n_block);
-	// get_incre_damping_force(factory) -= residual.head(n_block);
-	// // ! update left hand side
-	// get_sushi(factory) -= residual.head(n_block);
 
 	return 0;
 }

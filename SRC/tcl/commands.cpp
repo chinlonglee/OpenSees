@@ -4650,8 +4650,20 @@ specifyIntegrator(ClientData clientData, Tcl_Interp *interp, int argc,
 	  if(nullptr != theTransientAnalysis) theTransientAnalysis->setIntegrator(*theTransientIntegrator);
   }
   
-  else if(strcmp(argv[1], "LeeNewmarkFull") == 0) {
-	  theTransientIntegrator = static_cast<TransientIntegrator*>(OPS_LeeNewmarkFull());
+  else if(strcmp(argv[1], "LeeNewmarkFullKI") == 0) {
+	  theTransientIntegrator = static_cast<TransientIntegrator*>(OPS_LeeNewmarkFull(1));
+
+	  if(nullptr != theTransientAnalysis) theTransientAnalysis->setIntegrator(*theTransientIntegrator);
+  }
+
+  else if(strcmp(argv[1], "LeeNewmarkFullKC") == 0) {
+	  theTransientIntegrator = static_cast<TransientIntegrator*>(OPS_LeeNewmarkFull(2));
+
+	  if(nullptr != theTransientAnalysis) theTransientAnalysis->setIntegrator(*theTransientIntegrator);
+  }
+	
+  else if(strcmp(argv[1], "LeeNewmarkFullKT") == 0) {
+	  theTransientIntegrator = static_cast<TransientIntegrator*>(OPS_LeeNewmarkFull(3));
 
 	  if(nullptr != theTransientAnalysis) theTransientAnalysis->setIntegrator(*theTransientIntegrator);
   }
